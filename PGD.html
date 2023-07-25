@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        *{
+            margin: 0;
+            padding: 0;
+        }
+        .main {
+            position: relative;
+            display: flex;
+            width: 352px;
+            height: 400px;
+        }
+        .timedisplay{
+            position: absolute;
+            z-index: 20;
+            left: 5px;
+            top: 5px;
+            color: #FFF;
+        }
+        .ScaleImg {
+            position: absolute;
+            right: 5px;
+            bottom: -10px;
+            transform: scale(0.90);
+        }
+
+        #imgdata {
+            position: absolute;
+            /* right: 407px; */
+        }
+        #lgimgdata{
+            position: absolute;
+            /* right: 50px; */
+        }
+        #pswave{
+            position: absolute;
+        }
+    </style>
+    <script src="https://apps.bdimg.com/libs/jquery/2.1.4/jquery.min.js"></script>
+</head>
+
+<body>
+    <!-- nied强度条 -->
+    <div class="main">
+           <!-- 时间 -->
+        <div class="timedisplay">
+            <span>地表最大変位</span><br>
+            <span id="imgtime">2023/06/25 18:23:29</span>
+        </div>
+        <!-- 背景 -->
+        <img src="nied_base_b.png" width="352" height="400" alt="">
+        <!-- 强度 -->
+        <div class="ScaleImg">
+            <img src="nied_dcmap_s_b_scale.png" alt="">
+        </div>
+        <!-- 预测长周期地震动 -->
+        <div id="lgimgdata">
+            <img src="" alt="">
+        </div>
+        <!-- 测站数据 -->
+        <div id="imgdata">
+            <img src="20230625182329.dcmap_s.gif" alt="">
+        </div>
+        <!-- PS波 -->
+        <div id="pswave">
+            <img src="" alt="">
+        </div>
+    </div>
+    <!-- <img src="http://www.kmoni.bosai.go.jp/data/map_img/CommonImg/base_map_w.gif" alt=""> -->
+
+
+</body>
+<script>
+    let timestr = "";
+    let apitimestamp = "";
+    $.getJSON("https://api.wolfx.jp/ntp.json", function (json) {
+        timestr = json.JST.str
+        apitimestamp = new Date(timestr).getTime()
+        console.log(apitimestamp)
+    })
+
+    function formatTimestamp(timestamp,retype) {
+        const date = new Date(timestamp);
+
+        const year = date.getFullYear();
+        const month = padZero(date.getMonth() + 1);
+        const day = padZero(date.getDate());
+        const hours = padZero(date.getHours());
+        const minutes = padZero(date.getMinutes());
+        const seconds = padZero(date.getSeconds());
+        if(retype==1){
+            return `${year}${month}${day}${hours}${minutes}${seconds}`;
+        }else if(retype==2){
+            return `${year}/${month}/${day} ${hours}:${minutes}:${seconds}`;
+        }else{
+            return `${year}${month}${day}${hours}${minutes}${seconds}`;
+        }
+       
+    }
+
+    function padZero(num) {
+        return num.toString().padStart(2, '0');//字符填充
+    }
+
+    setInterval(() => {
+        apitimestamp+=1000;
+        // console.log(formatTimestamp(apitimestamp))
+        // http://www.kmoni.bosai.go.jp/data/map_img/RealTimeImg/dcmap_s/20230625/20230625164548.dcmap_s.gif
+        let ymd = formatTimestamp(apitimestamp-1000).slice(0,8)
+        let ymdhms = formatTimestamp(apitimestamp-1000);
+
+        $("#imgtime").text(formatTimestamp(apitimestamp-1000,2))
+        let imgurl = "http://www.kmoni.bosai.go.jp/data/map_img/RealTimeImg/dcmap_s/"+ymd+"/"+ ymdhms +".dcmap_s.gif"
+        let eewpsurl = "http://www.kmoni.bosai.go.jp/data/map_img/PSWaveImg/eew/"+ymd+"/"+ ymdhms +".eew.gif"
+        let lgint = "https://www.lmoni.bosai.go.jp/monitor/data/data/map_img/LongPeriodImg/eew/m2/"+ymd+"/"+ ymdhms +".eew_m2.abrspmx.gif"
+        $("#imgdata img").attr('src',imgurl)
+        $("#pswave img").attr('src',eewpsurl)
+        $("#lgimgdata img").attr('src',lgint)
+    }, 1000);
+
+
+
+    // 时间均是JST
+    //eew
+    // http://www.kmoni.bosai.go.jp/webservice/hypo/eew/20230625164402.json?
+    // jsoncallback=jQuery17106614762153338867_1687678963105
+    //eew预报圆
+    // http://www.kmoni.bosai.go.jp/data/map_img/PSWaveImg/eew/20230505/20230505144255.eew.gif
+    //长周期予报
+    //https://www.lmoni.bosai.go.jp/monitor/data/data/map_img/LongPeriodImg/eew/m2/20230505/20230505144255.eew_m2.abrspmx.gif
+    //最大震度予报
+    //http://www.kmoni.bosai.go.jp/data/map_img/EstShindoImg/eew/20230505/20230505144255.eew.gif
+    //PGD（最大变位图片)(352*400)
+    // http://www.kmoni.bosai.go.jp/data/map_img/RealTimeImg/dcmap_s/20230625/20230625164548.dcmap_s.gif
+</script>
+
+</html>
